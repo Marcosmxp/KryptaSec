@@ -22,24 +22,27 @@ Goal: make the repository safe and maintainable before product code.
 
 Exit criterion: repository governance and architecture are agreed and enforced.
 
-## Phase 1 — Core CLI
+## Phase 1 — Core CLI — COMPLETE
 
 Goal: a reliable local executable with no autonomous offensive behavior yet.
 
 - [x] Go module and CLI bootstrap
 - [x] configuration subsystem
-- [ ] structured logging
+- [x] structured logging
 - [x] scan IDs and lifecycle
 - [x] local SQLite storage
 - [x] target normalization
 - [x] scope policy parser
 - [x] `kryptasec doctor`
-- [x] unit test baseline
+- [x] database health check
+- [x] schema versioning/migration metadata
+- [x] unit/integration test baseline
 - [x] persisted `scan status <id>`
+- [x] CI format/test/vet/build gate
 
-Current checkpoint: `kryptasec scan` persists jobs in SQLite and transactionally moves them through `created -> validating_scope -> ready|failed`. `scan status <id>` can retrieve the job in a later CLI invocation. Active network testing remains disabled.
+Exit criterion met: `kryptasec scan` creates, transactionally tracks and retrieves a safe analysis job while active network testing remains disabled.
 
-Exit criterion remaining work: structured logging and storage health in `doctor`. Current persistence/status code is verified by CI on Go 1.27.1.
+Completed: 2026-09-19.
 
 ## Phase 2 — Static application inventory
 
