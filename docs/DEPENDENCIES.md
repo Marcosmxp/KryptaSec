@@ -4,11 +4,12 @@ Last reviewed: 2026-09-18
 
 ## Current production dependencies
 
-The current Phase 1 checkpoint uses only the Go standard library at runtime.
-
 | Dependency | Version | License | Purpose |
 | --- | --- | --- | --- |
 | Go toolchain | 1.27.1 | BSD-3-Clause | compiler, runtime and standard library |
+| modernc.org/sqlite | 1.59.0 | BSD-3-Clause | pure-Go SQLite database/sql driver for local scan persistence |
+
+Canonical upstream for `modernc.org/sqlite` is the modernc/cznic SQLite project. The driver is selected because it is pure Go and avoids a CGO dependency for Windows/Linux/macOS CLI distribution.
 
 ## GitHub Actions
 
@@ -16,10 +17,6 @@ The current Phase 1 checkpoint uses only the Go standard library at runtime.
 | --- | --- | --- |
 | actions/checkout | v5 | repository checkout in CI |
 | actions/setup-go | v6 | install/pin Go 1.27.1 in CI |
-
-## Planned, not yet imported
-
-SQLite persistence is planned for the next Phase 1 increment. The selected driver must be pure Go, actively maintained and license-compatible. It must not be added until its version/license/provenance is recorded here and its tests are present.
 
 ## Policy
 
