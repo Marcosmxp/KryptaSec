@@ -2,8 +2,10 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -92,5 +94,48 @@ func TestStoreGetUnknownScanReturnsNotFound(t *testing.T) {
 
 	if _, err := s.Get(context.Background(), "scan_missing"); !errors.Is(err, store.ErrNotFound) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestOpenSetsCurrentSchemaVersion(t *testing.T) {
+	s, err := Open(filepath.Join(t.TempDir(), "kryptasec.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+
+	version, err := s.SchemaVersion(context.Background())
+	if err != nil {
+		t.Fatalf("SchemaVersion() error = %v", err)
+	}
+	if version != CurrentSchemaVersion {
+		t.Fatalf("schema version = %d, want %d", version, CurrentSchemaVersion)
+	}
+	if version != 1 {
+		t.Fatalf("initial schema version = %d, want 1", version)
+	}
+}
+
+func TestOpenRejectsDatabaseFromNewerSchema(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "future.db")
+
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec("PRAGMA user_version = 2"); err != nil {
+		_ = db.Close()
+		t.Fatal(err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Open(path)
+	if err == nil {
+		t.Fatal("Open() expected error for future schema")
+	}
+	if !strings.Contains(err.Error(), "newer schema version") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
