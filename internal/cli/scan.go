@@ -11,6 +11,7 @@ import (
 
 	"github.com/Marcosmxp/KryptaSec/internal/app"
 	"github.com/Marcosmxp/KryptaSec/internal/config"
+	projectlogging "github.com/Marcosmxp/KryptaSec/internal/logging"
 	"github.com/Marcosmxp/KryptaSec/internal/store"
 	sqlitestore "github.com/Marcosmxp/KryptaSec/internal/store/sqlite"
 )
@@ -44,7 +45,7 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	svc, closeStore, err := openScanService()
+	svc, closeStore, err := openScanService(stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "storage error: %v\n", err)
 		return 1
@@ -71,7 +72,7 @@ func runScanStatus(ctx context.Context, args []string, stdout, stderr io.Writer)
 		return 2
 	}
 
-	svc, closeStore, err := openScanService()
+	svc, closeStore, err := openScanService(stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "storage error: %v\n", err)
 		return 1
@@ -94,7 +95,7 @@ func runScanStatus(ctx context.Context, args []string, stdout, stderr io.Writer)
 	return 0
 }
 
-func openScanService() (app.Service, func(), error) {
+func openScanService(logOutput io.Writer) (app.Service, func(), error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return app.Service{}, func() {}, err
@@ -105,7 +106,11 @@ func openScanService() (app.Service, func(), error) {
 		return app.Service{}, func() {}, err
 	}
 
-	return app.Service{Store: s}, func() { _ = s.Close() }, nil
+	logger := projectlogging.New(logOutput, cfg.LogLevel)
+	return app.Service{
+		Store:  s,
+		Logger: logger,
+	}, func() { _ = s.Close() }, nil
 }
 
 func writeScan(w io.Writer, id, target, kind, status string) {
