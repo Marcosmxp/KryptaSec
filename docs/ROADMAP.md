@@ -39,7 +39,7 @@ Goal: a reliable local executable with no autonomous offensive behavior yet.
 
 Current checkpoint: `kryptasec scan` persists jobs in SQLite and transactionally moves them through `created -> validating_scope -> ready|failed`. `scan status <id>` can retrieve the job in a later CLI invocation. Active network testing remains disabled.
 
-Exit criterion remaining work: structured logging, storage health in `doctor`, and final build/CI verification.
+Exit criterion remaining work: structured logging and storage health in `doctor`. Current persistence/status code is verified by CI on Go 1.27.1.
 
 ## Phase 2 — Static application inventory
 
