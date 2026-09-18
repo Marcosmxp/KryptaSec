@@ -7,11 +7,13 @@ import (
 
 	"github.com/Marcosmxp/KryptaSec/internal/policy"
 	"github.com/Marcosmxp/KryptaSec/internal/scan"
+	"github.com/Marcosmxp/KryptaSec/internal/store"
 	"github.com/Marcosmxp/KryptaSec/internal/target"
 )
 
 type Service struct {
-	Now func() time.Time
+	Store store.ScanRepository
+	Now   func() time.Time
 }
 
 type StartScanRequest struct {
@@ -27,30 +29,70 @@ func (s Service) StartScan(ctx context.Context, req StartScanRequest) (StartScan
 	if err := ctx.Err(); err != nil {
 		return StartScanResult{}, err
 	}
+	if s.Store == nil {
+		return StartScanResult{}, fmt.Errorf("scan store is required")
+	}
 
 	normalized, err := target.Normalize(req.Target)
 	if err != nil {
 		return StartScanResult{}, err
 	}
 
-	now := s.now()
-	job, err := scan.New(string(normalized.Kind), normalized.Canonical, now)
+	job, err := scan.New(string(normalized.Kind), normalized.Canonical, s.now())
 	if err != nil {
 		return StartScanResult{}, err
 	}
-	if err := job.Transition(scan.StatusValidatingScope, s.now()); err != nil {
+	if err := s.Store.Create(ctx, job); err != nil {
+		return StartScanResult{}, err
+	}
+
+	job, err = s.Store.Transition(
+		ctx,
+		job.ID,
+		scan.StatusCreated,
+		scan.StatusValidatingScope,
+		s.now(),
+	)
+	if err != nil {
 		return StartScanResult{Scan: job}, err
 	}
 
 	if !(policy.Scope{Hosts: req.ScopeHosts}).Allows(normalized) {
-		_ = job.Transition(scan.StatusFailed, s.now())
-		return StartScanResult{Scan: job}, fmt.Errorf("target %q is outside the authorized scope", normalized.Canonical)
+		failed, transitionErr := s.Store.Transition(
+			ctx,
+			job.ID,
+			scan.StatusValidatingScope,
+			scan.StatusFailed,
+			s.now(),
+		)
+		if transitionErr != nil {
+			return StartScanResult{Scan: job}, transitionErr
+		}
+		return StartScanResult{Scan: failed}, fmt.Errorf(
+			"target %q is outside the authorized scope",
+			normalized.Canonical,
+		)
 	}
 
-	if err := job.Transition(scan.StatusReady, s.now()); err != nil {
+	job, err = s.Store.Transition(
+		ctx,
+		job.ID,
+		scan.StatusValidatingScope,
+		scan.StatusReady,
+		s.now(),
+	)
+	if err != nil {
 		return StartScanResult{Scan: job}, err
 	}
+
 	return StartScanResult{Scan: job}, nil
+}
+
+func (s Service) GetScan(ctx context.Context, id string) (scan.Scan, error) {
+	if s.Store == nil {
+		return scan.Scan{}, fmt.Errorf("scan store is required")
+	}
+	return s.Store.Get(ctx, id)
 }
 
 func (s Service) now() time.Time {
