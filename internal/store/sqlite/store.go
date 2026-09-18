@@ -14,6 +14,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+const CurrentSchemaVersion = 1
+
 type Store struct {
 	db *sql.DB
 }
@@ -51,6 +53,28 @@ func (s *Store) Close() error {
 		return nil
 	}
 	return s.db.Close()
+}
+
+func (s *Store) Health(ctx context.Context) error {
+	if err := s.db.PingContext(ctx); err != nil {
+		return fmt.Errorf("ping sqlite database: %w", err)
+	}
+	version, err := s.SchemaVersion(ctx)
+	if err != nil {
+		return err
+	}
+	if version != CurrentSchemaVersion {
+		return fmt.Errorf("unexpected sqlite schema version %d, want %d", version, CurrentSchemaVersion)
+	}
+	return nil
+}
+
+func (s *Store) SchemaVersion(ctx context.Context) (int, error) {
+	var version int
+	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		return 0, fmt.Errorf("read sqlite schema version: %w", err)
+	}
+	return version, nil
 }
 
 func (s *Store) Create(ctx context.Context, job scan.Scan) error {
@@ -138,18 +162,38 @@ func (s *Store) migrate(ctx context.Context) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if _, err := tx.ExecContext(ctx, `
-		CREATE TABLE IF NOT EXISTS scans (
-			id TEXT PRIMARY KEY,
-			target TEXT NOT NULL,
-			target_kind TEXT NOT NULL,
-			status TEXT NOT NULL,
-			created_at TEXT NOT NULL,
-			updated_at TEXT NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status);
-	`); err != nil {
-		return fmt.Errorf("apply sqlite migration: %w", err)
+	version, err := schemaVersion(ctx, tx)
+	if err != nil {
+		return err
+	}
+	if version > CurrentSchemaVersion {
+		return fmt.Errorf(
+			"database uses newer schema version %d; KryptaSec supports up to %d",
+			version,
+			CurrentSchemaVersion,
+		)
+	}
+
+	if version == 0 {
+		if _, err := tx.ExecContext(ctx, `
+			CREATE TABLE IF NOT EXISTS scans (
+				id TEXT PRIMARY KEY,
+				target TEXT NOT NULL,
+				target_kind TEXT NOT NULL,
+				status TEXT NOT NULL,
+				created_at TEXT NOT NULL,
+				updated_at TEXT NOT NULL
+			);
+			CREATE INDEX IF NOT EXISTS idx_scans_status ON scans(status);
+		`); err != nil {
+			return fmt.Errorf("apply sqlite migration 1: %w", err)
+		}
+		if _, err := tx.ExecContext(
+			ctx,
+			fmt.Sprintf("PRAGMA user_version = %d", CurrentSchemaVersion),
+		); err != nil {
+			return fmt.Errorf("record sqlite schema version: %w", err)
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -160,6 +204,14 @@ func (s *Store) migrate(ctx context.Context) error {
 
 type queryer interface {
 	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+}
+
+func schemaVersion(ctx context.Context, q queryer) (int, error) {
+	var version int
+	if err := q.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		return 0, fmt.Errorf("read sqlite schema version: %w", err)
+	}
+	return version, nil
 }
 
 func getScan(ctx context.Context, q queryer, id string) (scan.Scan, error) {
