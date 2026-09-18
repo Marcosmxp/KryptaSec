@@ -17,26 +17,32 @@ Goal: make the repository safe and maintainable before product code.
 - [ ] choose final distribution license
 - [ ] branch protection/rulesets
 - [ ] issue/PR templates
-- [ ] CI foundation
+- [x] CI foundation
 - [ ] dependency/license scanning
 
 Exit criterion: repository governance and architecture are agreed and enforced.
 
-## Phase 1 — Core CLI
+## Phase 1 — Core CLI — COMPLETE
 
 Goal: a reliable local executable with no autonomous offensive behavior yet.
 
-- [ ] Go module and CLI bootstrap
-- [ ] configuration subsystem
-- [ ] structured logging
-- [ ] scan IDs and lifecycle
-- [ ] local SQLite storage
-- [ ] target normalization
-- [ ] scope policy parser
-- [ ] `kryptasec doctor`
-- [ ] unit test baseline
+- [x] Go module and CLI bootstrap
+- [x] configuration subsystem
+- [x] structured logging
+- [x] scan IDs and lifecycle
+- [x] local SQLite storage
+- [x] target normalization
+- [x] scope policy parser
+- [x] `kryptasec doctor`
+- [x] database health check
+- [x] schema versioning/migration metadata
+- [x] unit/integration test baseline
+- [x] persisted `scan status <id>`
+- [x] CI format/test/vet/build gate
 
-Exit criterion: `kryptasec scan` can create and track a safe analysis job.
+Exit criterion met: `kryptasec scan` creates, transactionally tracks and retrieves a safe analysis job while active network testing remains disabled.
+
+Completed: 2026-09-19.
 
 ## Phase 2 — Static application inventory
 

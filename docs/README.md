@@ -9,6 +9,8 @@ This directory is the source of truth for the technical and operational design o
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System boundaries, components, data flow and repository layout |
 | [ROADMAP.md](ROADMAP.md) | Milestones from foundation to v1.0 |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Engineering workflow, quality gates and branch conventions |
+| [CLI.md](CLI.md) | Current implemented CLI contract and safety limits |
+| [DEPENDENCIES.md](DEPENDENCIES.md) | Dependency provenance and license register |
 | [SECURITY_MODEL.md](SECURITY_MODEL.md) | Authorization, sandboxing, scope and safety constraints |
 | [LEGAL_AND_PROVENANCE.md](LEGAL_AND_PROVENANCE.md) | Clean-room and dependency provenance policy |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Current phase, completed work and next tasks |

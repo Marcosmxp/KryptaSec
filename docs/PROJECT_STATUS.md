@@ -1,45 +1,81 @@
 # Project Status
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 
 ## Current phase
 
-**Phase 0 — Foundation**
+**Phase 1 — Core CLI: COMPLETE**
 
-The repository is being prepared before implementation of the scanner.
+Next planned phase: **Phase 2 — Static application inventory**.
 
-## Completed
+## Phase 1 delivered
 
-- repository created;
-- `main` branch established;
-- `development` integration branch established;
-- CODEOWNERS added;
-- basic contribution workflow documented;
-- architecture v0.1 drafted;
-- security model v0.1 drafted;
-- clean-room/provenance policy drafted;
-- development workflow drafted;
-- roadmap drafted;
-- initial ADRs drafted.
+- Go 1.27.1 module/toolchain baseline;
+- CLI entrypoint and version output;
+- configuration loader;
+- `kryptasec doctor`;
+- runtime/data-directory/SQLite health checks;
+- SQLite schema version 1 with future-version rejection;
+- local-directory and HTTP target normalization;
+- exact-host scope policy with fail-closed behavior;
+- cryptographically random scan IDs;
+- Phase 1 scan state machine;
+- local SQLite scan persistence;
+- expected-state transactional scan transitions;
+- persisted `kryptasec scan status <id>`;
+- JSON structured logging with sensitive-field redaction;
+- lifecycle logs that omit full target values;
+- unit/integration test baseline;
+- GitHub Actions gate for format, tests, vet and CLI build.
 
-## In progress
+## Phase 1 data flow
 
-- project foundation review;
-- branch protection configuration;
-- final licensing decision.
+```text
+normalize target
+-> INSERT scan(created)
+-> transaction: created -> validating_scope
+-> exact scope check
+-> transaction: validating_scope -> ready | failed
+-> later CLI invocation: scan status <id>
+```
 
-## Next engineering tasks
+The system does not yet send HTTP requests, run security scanners, execute commands against a target, invoke an LLM or attempt exploitation.
 
-1. merge the foundation PR into `development`;
-2. select final license/governance model;
-3. bootstrap Go module and CLI;
-4. add CI for format/test/vet;
-5. implement configuration and scan state primitives;
-6. implement policy/scope primitives before active network tooling.
+## Verification
+
+Phase 1 completion code passed GitHub Actions on Go 1.27.1:
+
+```text
+gofmt
+go test ./...
+go vet ./...
+go build ./cmd/kryptasec
+```
+
+## Project-level work still open
+
+These are governance/release concerns and do not block the Phase 1 technical exit criterion:
+
+- final distribution license decision;
+- branch protection/rulesets;
+- issue templates;
+- automated dependency/license scanning.
+
+## Next engineering milestone
+
+Phase 2 starts with deterministic, read-only local analysis:
+
+1. language/framework detection;
+2. dependency inventory;
+3. secret-detection adapter;
+4. source-tree indexing;
+5. configuration discovery;
+6. deterministic findings model;
+7. JSON/SARIF export.
 
 ## Explicitly not started
 
-- autonomous pentesting agents;
+- LLM agents;
 - remote active testing;
 - exploitation/validation runtime;
 - remediation engine;
@@ -47,6 +83,6 @@ The repository is being prepared before implementation of the scanner.
 
 ## Current architecture version
 
-`0.1-draft`
+`0.1`
 
-Any significant architecture change should update this file and the relevant ADR.
+Any significant architecture change must update the relevant document and ADR.

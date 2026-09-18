@@ -1,7 +1,7 @@
 # KryptaSec Architecture
 
 Status: Draft v0.1  
-Last reviewed: 2026-09-18
+Last reviewed: 2026-09-19
 
 ## 1. Goal
 
@@ -285,6 +285,21 @@ Views:
 - configuration health.
 
 The dashboard communicates only with the local API in the initial release.
+
+### 3.13 Phase 1 Persistence and Observability
+
+Phase 1 establishes the first implemented orchestration substrate:
+
+- SQLite is the local scan-state store.
+- Schema metadata uses `PRAGMA user_version`; the current schema version is `1`.
+- Opening a database from a newer unsupported schema fails closed.
+- Scan lifecycle updates are transactional and require the expected previous state.
+- `kryptasec doctor` validates runtime, data-directory and SQLite health.
+- Structured lifecycle logs use Go `log/slog` JSON output.
+- Sensitive structured keys are redacted before emission.
+- Lifecycle logs identify scans by scan ID and target kind rather than full target path/URL.
+
+Phase 1 intentionally contains no active network testing, scanner execution, LLM invocation or exploitation logic.
 
 ## 4. Repository layout
 

@@ -1,0 +1,24 @@
+# Go build outputs
+/kryptasec
+/kryptasec.exe
+/bin/
+/dist/
+*.test
+*.out
+
+# Local KryptaSec runtime data
+/.kryptasec/
+*.db
+*.db-shm
+*.db-wal
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+.env.*
+!.env.example
