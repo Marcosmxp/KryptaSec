@@ -2,12 +2,29 @@ package app
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 	"time"
+
+	sqlitestore "github.com/Marcosmxp/KryptaSec/internal/store/sqlite"
 )
 
+func newTestService(t *testing.T, now func() time.Time) Service {
+	t.Helper()
+
+	s, err := sqlitestore.Open(filepath.Join(t.TempDir(), "kryptasec.db"))
+	if err != nil {
+		t.Fatalf("open test store: %v", err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+
+	return Service{Store: s, Now: now}
+}
+
 func TestStartScanAllowsLocalDirectory(t *testing.T) {
-	svc := Service{Now: func() time.Time { return time.Date(2026, 9, 18, 20, 0, 0, 0, time.UTC) }}
+	svc := newTestService(t, func() time.Time {
+		return time.Date(2026, 9, 18, 20, 0, 0, 0, time.UTC)
+	})
 
 	got, err := svc.StartScan(context.Background(), StartScanRequest{Target: t.TempDir()})
 	if err != nil {
@@ -19,7 +36,7 @@ func TestStartScanAllowsLocalDirectory(t *testing.T) {
 }
 
 func TestStartScanDeniesRemoteTargetWithoutExplicitScope(t *testing.T) {
-	svc := Service{Now: time.Now}
+	svc := newTestService(t, time.Now)
 
 	got, err := svc.StartScan(context.Background(), StartScanRequest{Target: "https://example.com"})
 	if err == nil {
@@ -31,7 +48,7 @@ func TestStartScanDeniesRemoteTargetWithoutExplicitScope(t *testing.T) {
 }
 
 func TestStartScanAllowsExactRemoteScopeWithoutNetworkRequest(t *testing.T) {
-	svc := Service{Now: time.Now}
+	svc := newTestService(t, time.Now)
 
 	got, err := svc.StartScan(context.Background(), StartScanRequest{
 		Target:     "https://EXAMPLE.com:443/app",
