@@ -20,6 +20,7 @@ Foundation:
 - CI workflow in `development`.
 
 Phase 1 checkpoint:
+- CI verified on Go 1.27.1 (`gofmt`, `go test ./...`, `go vet ./...`, `go build ./cmd/kryptasec`);
 - Go module/toolchain baseline;
 - CLI entrypoint;
 - configuration loader;
@@ -50,7 +51,6 @@ The system still does not send HTTP requests, run security scanners, execute com
 
 ## In progress
 
-- Phase 1 CI verification on Go 1.27.1;
 - structured logger wiring;
 - database/storage health in `doctor`;
 - final distribution license decision;
@@ -61,7 +61,7 @@ The system still does not send HTTP requests, run security scanners, execute com
 1. wire `log/slog` with redaction-safe structured fields;
 2. make `doctor` open/check the SQLite database;
 3. add schema-version/migration metadata before future schema expansion;
-4. complete final Phase 1 build/CI verification;
+4. close the remaining Phase 1 quality gates;
 5. close the Phase 1 exit criterion.
 
 ## Explicitly not started
