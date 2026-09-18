@@ -17,7 +17,7 @@ Goal: make the repository safe and maintainable before product code.
 - [ ] choose final distribution license
 - [ ] branch protection/rulesets
 - [ ] issue/PR templates
-- [ ] CI foundation
+- [x] CI foundation
 - [ ] dependency/license scanning
 
 Exit criterion: repository governance and architecture are agreed and enforced.
@@ -26,17 +26,19 @@ Exit criterion: repository governance and architecture are agreed and enforced.
 
 Goal: a reliable local executable with no autonomous offensive behavior yet.
 
-- [ ] Go module and CLI bootstrap
-- [ ] configuration subsystem
+- [x] Go module and CLI bootstrap
+- [x] configuration subsystem
 - [ ] structured logging
-- [ ] scan IDs and lifecycle
+- [x] scan IDs and lifecycle
 - [ ] local SQLite storage
-- [ ] target normalization
-- [ ] scope policy parser
-- [ ] `kryptasec doctor`
-- [ ] unit test baseline
+- [x] target normalization
+- [x] scope policy parser
+- [x] `kryptasec doctor`
+- [x] unit test baseline
 
-Exit criterion: `kryptasec scan` can create and track a safe analysis job.
+Current checkpoint: `kryptasec scan` validates local/HTTP targets and explicit exact-host scope, creates an in-memory scan job and stops at `ready`. It performs no active network testing.
+
+Exit criterion: `kryptasec scan` can create and track a safe analysis job persistently.
 
 ## Phase 2 — Static application inventory
 
