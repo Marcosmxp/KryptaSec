@@ -28,40 +28,41 @@ Phase 1 checkpoint:
 - exact-host scope policy with fail-closed behavior;
 - cryptographically random scan IDs;
 - Phase 1 scan state machine;
-- `kryptasec scan` validation-only flow;
+- local SQLite scan persistence;
+- expected-state transactional scan transitions;
+- persisted `kryptasec scan status <id>`;
 - unit-test baseline.
 
 ## Current behavior
 
-`kryptasec scan` currently performs preparation only:
-
 ```text
 normalize target
--> create in-memory scan
--> validating_scope
+-> INSERT scan(created)
+-> transaction: created -> validating_scope
 -> exact scope check
--> ready | failed
+-> transaction: validating_scope -> ready | failed
+-> later CLI invocation: scan status <id>
 ```
 
-It does not send HTTP requests, run security scanners, execute commands against a target, or invoke an LLM.
+The SQLite transition uses the expected previous state and refuses a conflicting update rather than silently overwriting newer state.
+
+The system still does not send HTTP requests, run security scanners, execute commands against a target, or invoke an LLM.
 
 ## In progress
 
 - Phase 1 CI verification on Go 1.27.1;
-- local SQLite persistence;
 - structured logger wiring;
-- persisted scan retrieval/status commands;
+- database/storage health in `doctor`;
 - final distribution license decision;
 - branch protection/rulesets.
 
 ## Next engineering tasks
 
-1. add the SQLite store behind a small repository interface;
-2. persist every scan transition transactionally;
-3. add `scan status <id>`;
-4. wire `log/slog` with redaction-safe structured fields;
-5. make `doctor` report storage/database health;
-6. complete the Phase 1 exit criterion and update docs.
+1. wire `log/slog` with redaction-safe structured fields;
+2. make `doctor` open/check the SQLite database;
+3. add schema-version/migration metadata before future schema expansion;
+4. complete final Phase 1 build/CI verification;
+5. close the Phase 1 exit criterion.
 
 ## Explicitly not started
 
