@@ -30,15 +30,16 @@ Goal: a reliable local executable with no autonomous offensive behavior yet.
 - [x] configuration subsystem
 - [ ] structured logging
 - [x] scan IDs and lifecycle
-- [ ] local SQLite storage
+- [x] local SQLite storage
 - [x] target normalization
 - [x] scope policy parser
 - [x] `kryptasec doctor`
 - [x] unit test baseline
+- [x] persisted `scan status <id>`
 
-Current checkpoint: `kryptasec scan` validates local/HTTP targets and explicit exact-host scope, creates an in-memory scan job and stops at `ready`. It performs no active network testing.
+Current checkpoint: `kryptasec scan` persists jobs in SQLite and transactionally moves them through `created -> validating_scope -> ready|failed`. `scan status <id>` can retrieve the job in a later CLI invocation. Active network testing remains disabled.
 
-Exit criterion: `kryptasec scan` can create and track a safe analysis job persistently.
+Exit criterion remaining work: structured logging, storage health in `doctor`, and final build/CI verification.
 
 ## Phase 2 — Static application inventory
 
