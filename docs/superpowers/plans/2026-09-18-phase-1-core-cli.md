@@ -6,7 +6,7 @@
 
 **Architecture:** The CLI is a thin adapter over small internal packages. Target normalization and scope authorization are deterministic security boundaries. Scan lifecycle/persistence are independent of future agents so the orchestration layer can be added without changing the CLI contract.
 
-**Tech Stack:** Go 1.27.1, Cobra v1.10.2, Go standard library `log/slog`, modernc.org/sqlite v1.59.0, GitHub Actions.
+**Tech Stack:** Go 1.27.1, Go standard library (`flag`, `log/slog`), modernc.org/sqlite v1.59.0, GitHub Actions.
 
 **Spec:** `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/SECURITY_MODEL.md`
 
@@ -34,7 +34,7 @@
 - Create: `docs/DEPENDENCIES.md`
 
 **Interfaces:**
-- Produces: `cli.NewRootCommand(version string) *cobra.Command`
+- Produces: `cli.Run(ctx context.Context, args []string, stdout, stderr io.Writer) int`
 - Produces executable entrypoint: `cmd/kryptasec`
 
 - [ ] **Step 1: Write a failing root-command test**
@@ -53,7 +53,7 @@ Expected: FAIL because the package/constructor does not exist.
 
 - [ ] **Step 3: Implement the minimal root command**
 
-Use Cobra only for argument/command routing. Business logic must remain outside `internal/cli`.
+Use the Go standard library for argument/command routing. Business logic must remain outside `internal/cli`.
 
 - [ ] **Step 4: Add CI**
 
