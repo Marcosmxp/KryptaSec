@@ -33,9 +33,12 @@ kryptasec --version
 kryptasec doctor
 kryptasec scan ./local-project
 kryptasec scan --scope-host staging.example.com https://staging.example.com
+kryptasec scan status <scan-id>
 ```
 
-The current `scan` command only normalizes the target, checks authorization scope and creates an in-memory scan job. It performs no active testing or network request.
+Scan jobs are persisted locally in SQLite under the KryptaSec data directory. Every state transition uses an expected-state transactional update before the next state is accepted.
+
+The current `scan` command still performs no active testing or remote network request.
 
 See [docs/CLI.md](docs/CLI.md) for the exact current contract.
 
