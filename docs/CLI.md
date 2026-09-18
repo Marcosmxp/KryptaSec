@@ -1,7 +1,7 @@
 # KryptaSec CLI
 
-Status: Phase 1 checkpoint  
-The CLI contract documented here reflects implemented behavior, not future roadmap features.
+Status: Phase 1 complete  
+The CLI contract documented here reflects implemented behavior.
 
 ## Build
 
@@ -31,10 +31,14 @@ Development builds report `dev` unless the version variable is set at build time
 kryptasec doctor
 ```
 
-Current checks:
+Checks:
 
 - Go runtime/OS/architecture;
-- KryptaSec data-directory creation and write access.
+- KryptaSec data-directory creation and write access;
+- SQLite database open/ping health;
+- SQLite schema version compatibility.
+
+A healthy database check reports the active schema version, currently `schema=1`.
 
 Environment:
 
@@ -42,6 +46,24 @@ Environment:
 KRYPTASEC_DATA_DIR
 KRYPTASEC_LOG_LEVEL=debug|info|warn|error
 ```
+
+## Structured logging
+
+Lifecycle logs are JSON produced by Go `log/slog`.
+
+Sensitive structured keys are redacted automatically, including:
+
+```text
+api_key
+apikey
+authorization
+cookie
+password
+secret
+token
+```
+
+Lifecycle logs intentionally use scan ID, target kind and status rather than logging the full target path/URL.
 
 ## Scan preparation
 
@@ -108,9 +130,15 @@ created/validating_scope/ready
 
 Each transition is persisted in a SQLite transaction and includes the expected previous status. If the stored state no longer matches the expected state, the transition fails with a conflict rather than overwriting newer state.
 
+## SQLite schema
+
+Phase 1 establishes SQLite schema version `1` using `PRAGMA user_version`.
+
+Opening a database with a schema version newer than the running KryptaSec binary supports fails closed instead of attempting to downgrade or reinterpret the database.
+
 ## Security boundary
 
-At this checkpoint, `kryptasec scan`:
+The Phase 1 `kryptasec scan` command:
 
 - does not send an HTTP request;
 - does not crawl the target;
@@ -118,4 +146,4 @@ At this checkpoint, `kryptasec scan`:
 - does not invoke an LLM;
 - does not exploit vulnerabilities.
 
-SQLite persistence stores scan metadata only. Active testing remains disabled in Phase 1.
+Phase 1 provides the safe orchestration foundation only.
