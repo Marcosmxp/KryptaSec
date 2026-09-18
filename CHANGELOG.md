@@ -20,7 +20,9 @@ The project has not released a public version yet.
 - local and HTTP target normalization;
 - exact-host authorization scope policy;
 - scan IDs and Phase 1 lifecycle state machine;
-- validation-only `kryptasec scan` command;
+- SQLite scan persistence;
+- transactional expected-state lifecycle updates;
+- persisted `kryptasec scan status <id>`;
 - pull-request CI for formatting, tests, vet and build.
 
 ### Security
@@ -28,4 +30,5 @@ The project has not released a public version yet.
 - remote scan preparation fails closed unless the exact hostname is explicitly authorized;
 - URL-embedded credentials are rejected;
 - subdomains and wildcard patterns are not implicitly authorized;
+- concurrent/stale lifecycle transitions fail with a state conflict;
 - Phase 1 scan preparation performs no active network requests.
