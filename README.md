@@ -2,7 +2,7 @@
 
 KryptaSec is a free, source-available autonomous application-security platform focused on software built with modern frameworks and AI-assisted development.
 
-> Status: Phase 1 core CLI is in development. No production security scanner has been released yet.
+> Status: Phase 1 core CLI is complete. No production security scanner has been released yet.
 
 ## Project principles
 
@@ -24,9 +24,7 @@ KryptaSec is a free, source-available autonomous application-security platform f
 - Reports: JSON, SARIF, Markdown and HTML
 - AI providers: OpenAI-compatible APIs, Anthropic, Gemini, OpenRouter and local models through adapters
 
-## Current development CLI
-
-The Phase 1 branch currently provides:
+## Phase 1 CLI
 
 ```bash
 kryptasec --version
@@ -36,11 +34,13 @@ kryptasec scan --scope-host staging.example.com https://staging.example.com
 kryptasec scan status <scan-id>
 ```
 
-Scan jobs are persisted locally in SQLite under the KryptaSec data directory. Every state transition uses an expected-state transactional update before the next state is accepted.
+Scan jobs are persisted locally in SQLite. Every lifecycle transition is transactional and checks the expected previous state before it can update the database.
 
-The current `scan` command still performs no active testing or remote network request.
+Structured lifecycle logs use JSON and redact sensitive field names such as tokens, passwords, authorization headers, cookies and API keys. Target paths/URLs are not written to lifecycle logs.
 
-See [docs/CLI.md](docs/CLI.md) for the exact current contract.
+The current `scan` command performs no active testing or remote network request.
+
+See [docs/CLI.md](docs/CLI.md) for the implemented contract.
 
 ## Branch model
 
