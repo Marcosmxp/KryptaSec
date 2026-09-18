@@ -21,8 +21,12 @@ The project has not released a public version yet.
 - exact-host authorization scope policy;
 - scan IDs and Phase 1 lifecycle state machine;
 - SQLite scan persistence;
+- SQLite schema version 1 and future-schema rejection;
+- SQLite health check in `kryptasec doctor`;
 - transactional expected-state lifecycle updates;
 - persisted `kryptasec scan status <id>`;
+- JSON structured lifecycle logging;
+- sensitive structured-field redaction;
 - pull-request CI for formatting, tests, vet and build.
 
 ### Security
@@ -31,4 +35,7 @@ The project has not released a public version yet.
 - URL-embedded credentials are rejected;
 - subdomains and wildcard patterns are not implicitly authorized;
 - concurrent/stale lifecycle transitions fail with a state conflict;
+- databases from unsupported newer schema versions fail closed;
+- sensitive log fields are redacted;
+- lifecycle logs omit full target values;
 - Phase 1 scan preparation performs no active network requests.
