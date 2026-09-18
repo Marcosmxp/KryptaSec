@@ -72,16 +72,27 @@ Phase 1 deliberately does not infer authorization:
 - redirects do not expand scope;
 - credentials embedded in URLs are rejected.
 
-Multiple exact hosts can be provided by repeating the flag:
+Multiple exact hosts can be provided by repeating the flag.
 
-```bash
-kryptasec scan \
-  --scope-host app.example.com \
-  --scope-host api.example.com \
-  https://app.example.com
+## Persisted status
+
+Each accepted or rejected scan job is stored in:
+
+```text
+<KRYPTASEC_DATA_DIR>/kryptasec.db
 ```
 
-## Current scan lifecycle
+When `KRYPTASEC_DATA_DIR` is unset, the OS user configuration directory is used.
+
+Read a scan later with:
+
+```bash
+kryptasec scan status <scan-id>
+```
+
+The command returns the canonical target, target kind, current status, creation time and last update time.
+
+## Transactional lifecycle
 
 ```text
 created
@@ -95,7 +106,7 @@ created/validating_scope/ready
   -> cancelled
 ```
 
-The current command stops at `ready`.
+Each transition is persisted in a SQLite transaction and includes the expected previous status. If the stored state no longer matches the expected state, the transition fails with a conflict rather than overwriting newer state.
 
 ## Security boundary
 
@@ -105,7 +116,6 @@ At this checkpoint, `kryptasec scan`:
 - does not crawl the target;
 - does not execute shell commands;
 - does not invoke an LLM;
-- does not exploit vulnerabilities;
-- does not persist the scan yet.
+- does not exploit vulnerabilities.
 
-SQLite persistence and persisted status commands are the next Phase 1 implementation step.
+SQLite persistence stores scan metadata only. Active testing remains disabled in Phase 1.
