@@ -1,20 +1,55 @@
 # KryptaSec
 
-Open-source autonomous security testing for modern applications.
+KryptaSec is a free, source-available autonomous application-security platform focused on software built with modern frameworks and AI-assisted development.
 
-## Branching model
+> Status: architecture/foundation phase. No production scanner has been released yet.
 
-- `main`: stable/release branch. No day-to-day development.
-- `development`: integration branch for active development.
-- `feature/*`: feature work, merged into `development` through pull requests.
-- `fix/*`: bug fixes, merged into `development` through pull requests.
-- `hotfix/*`: urgent production fixes, reviewed before reaching `main`.
+## Project principles
 
-## Contribution flow
+- Independent implementation: KryptaSec is not a source-code port of Strix or any other product.
+- Security by authorization: active testing must remain inside an explicitly approved scope.
+- Evidence before findings: vulnerabilities should be reported as confirmed only when supported by reproducible evidence.
+- Local-first: the initial product runs on the user's machine and uses the user's selected LLM provider.
+- Provider-neutral: cloud and local LLMs are accessed through a dedicated abstraction.
+- Documentation is part of the product: architecture and decisions must be updated with code changes.
 
-1. Fork the repository or create an authorized feature branch.
-2. Branch from `development`.
-3. Open a pull request targeting `development`.
-4. After validation, releases are promoted from `development` to `main`.
+## Planned stack
 
-Direct development on `main` is intentionally avoided.
+- Core/CLI/orchestration: Go
+- Dashboard: React + TypeScript
+- Local API: Go HTTP/WebSocket API
+- Storage: SQLite
+- Sandbox: Docker first, Podman-compatible later
+- Browser automation: Playwright
+- Reports: JSON, SARIF, Markdown and HTML
+- AI providers: OpenAI-compatible APIs, Anthropic, Gemini, OpenRouter and local models through adapters
+
+## Branch model
+
+- `main`: stable releases only
+- `development`: integration branch
+- `feature/*`: new functionality
+- `fix/*`: bug fixes
+- `hotfix/*`: urgent release fixes
+
+Normal work starts from `development` and returns through pull requests.
+
+## Documentation
+
+Start at [docs/README.md](docs/README.md).
+
+Key documents:
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Security model](docs/SECURITY_MODEL.md)
+- [Legal and provenance policy](docs/LEGAL_AND_PROVENANCE.md)
+- [Project status](docs/PROJECT_STATUS.md)
+- [Architecture decisions](docs/adr/)
+
+## Legal note
+
+Functional similarity to another security product does not make a rewrite legally independent by itself. KryptaSec follows a clean-room policy: no copying of source code, prompts, UI assets, documentation, tests, internal names or other protected expression from reference products. Third-party dependencies and borrowed code, when intentionally used, must be tracked with their licenses and attribution requirements.
+
+The final distribution license is intentionally not declared in this foundation commit and must be selected before the first public release.
