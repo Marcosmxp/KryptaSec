@@ -2,11 +2,17 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"path/filepath"
+	"time"
 
 	"github.com/Marcosmxp/KryptaSec/internal/app"
+	"github.com/Marcosmxp/KryptaSec/internal/config"
+	"github.com/Marcosmxp/KryptaSec/internal/store"
+	sqlitestore "github.com/Marcosmxp/KryptaSec/internal/store/sqlite"
 )
 
 type stringListFlag []string
@@ -21,6 +27,10 @@ func (s *stringListFlag) Set(value string) error {
 }
 
 func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "status" {
+		return runScanStatus(ctx, args[1:], stdout, stderr)
+	}
+
 	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	var scopeHosts stringListFlag
@@ -34,7 +44,14 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	result, err := (app.Service{}).StartScan(ctx, app.StartScanRequest{
+	svc, closeStore, err := openScanService()
+	if err != nil {
+		fmt.Fprintf(stderr, "storage error: %v\n", err)
+		return 1
+	}
+	defer closeStore()
+
+	result, err := svc.StartScan(ctx, app.StartScanRequest{
 		Target:     fs.Arg(0),
 		ScopeHosts: scopeHosts,
 	})
@@ -43,10 +60,57 @@ func runScan(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	fmt.Fprintf(stdout, "scan: %s\n", result.Scan.ID)
-	fmt.Fprintf(stdout, "target: %s\n", result.Scan.Target)
-	fmt.Fprintf(stdout, "kind: %s\n", result.Scan.TargetKind)
-	fmt.Fprintf(stdout, "status: %s\n", result.Scan.Status)
+	writeScan(stdout, result.Scan.ID, result.Scan.Target, result.Scan.TargetKind, string(result.Scan.Status))
 	fmt.Fprintln(stdout, "active testing: disabled (Phase 1)")
 	return 0
+}
+
+func runScanStatus(ctx context.Context, args []string, stdout, stderr io.Writer) int {
+	if len(args) != 1 {
+		fmt.Fprintln(stderr, "usage: kryptasec scan status <id>")
+		return 2
+	}
+
+	svc, closeStore, err := openScanService()
+	if err != nil {
+		fmt.Fprintf(stderr, "storage error: %v\n", err)
+		return 1
+	}
+	defer closeStore()
+
+	job, err := svc.GetScan(ctx, args[0])
+	if errors.Is(err, store.ErrNotFound) {
+		fmt.Fprintf(stderr, "scan not found: %s\n", args[0])
+		return 1
+	}
+	if err != nil {
+		fmt.Fprintf(stderr, "scan status error: %v\n", err)
+		return 1
+	}
+
+	writeScan(stdout, job.ID, job.Target, job.TargetKind, string(job.Status))
+	fmt.Fprintf(stdout, "created: %s\n", job.CreatedAt.UTC().Format(time.RFC3339Nano))
+	fmt.Fprintf(stdout, "updated: %s\n", job.UpdatedAt.UTC().Format(time.RFC3339Nano))
+	return 0
+}
+
+func openScanService() (app.Service, func(), error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return app.Service{}, func() {}, err
+	}
+
+	s, err := sqlitestore.Open(filepath.Join(cfg.DataDir, "kryptasec.db"))
+	if err != nil {
+		return app.Service{}, func() {}, err
+	}
+
+	return app.Service{Store: s}, func() { _ = s.Close() }, nil
+}
+
+func writeScan(w io.Writer, id, target, kind, status string) {
+	fmt.Fprintf(w, "scan: %s\n", id)
+	fmt.Fprintf(w, "target: %s\n", target)
+	fmt.Fprintf(w, "kind: %s\n", kind)
+	fmt.Fprintf(w, "status: %s\n", status)
 }
